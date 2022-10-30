@@ -8,9 +8,10 @@ import nftMintingSiteTest2 from './utils/NftMintingSiteTest2.json';
 // Constants
 const TWITTER_HANDLE = 'ronjozkeddely';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = '';
-const TOTAL_MINT_COUNT = 50;
-const CONTRACT_ADDRESS = '0x1A3C504c5d1719349C12041B31dE31B25faA3cdF';
+const OPENSEA_LINK =
+	'https://testnets.opensea.io/collection/squarenft-qip4pymiv6';
+// const TOTAL_MINT_COUNT = 50;
+const CONTRACT_ADDRESS = '0x4db8CF4DB16BfD873524F2e5D6512DDaE15fcBb5';
 
 const App = (): ReactElement => {
 	const [currentAccount, setcurrentAccount] = useState('');
@@ -144,6 +145,7 @@ const App = (): ReactElement => {
 
 	useEffect(() => {
 		checkIfWalletIsConnected();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (
@@ -154,22 +156,45 @@ const App = (): ReactElement => {
 					<p className='sub-text'>
 						Each unique. Each beautiful. Discover your NFT today.
 					</p>
-					{currentAccount === '' ? (
-						renderNotConnectedContainer()
-					) : (
+					<div
+						style={{
+							display: 'flex',
+							flexDirection: 'column',
+							width: '500px',
+							margin: '0 auto',
+						}}
+					>
+						{currentAccount === '' ? (
+							renderNotConnectedContainer()
+						) : (
+							<button
+								onClick={askContractToMintNft}
+								className='cta-button connect-wallet-button'
+								disabled={mintingNFT}
+							>
+								{mintingNFT ? 'Loading...' : 'Mint NFT'}
+							</button>
+						)}
+						{mintInfo !== '' ? (
+							<h3 style={{ marginTop: '15px', fontWeight: 'bold' }}>
+								{mintInfo}
+							</h3>
+						) : null}
 						<button
-							onClick={askContractToMintNft}
+							style={{ marginTop: '25px' }}
 							className='cta-button connect-wallet-button'
-							disabled={mintingNFT}
 						>
-							{mintingNFT ? 'Loading...' : 'Mint NFT'}
+							<a
+								className='footer-text'
+								style={{ textDecoration: 'none' }}
+								href={OPENSEA_LINK}
+								target='_blank'
+								rel='noreferrer'
+							>
+								View Collection On Opensea
+							</a>
 						</button>
-					)}
-					{mintInfo !== '' ? (
-						<h3 style={{ marginTop: '15px', fontWeight: 'bold' }}>
-							{mintInfo}
-						</h3>
-					) : null}
+					</div>
 				</div>
 				<div className='footer-container'>
 					<img alt='Twitter Logo' className='twitter-logo' src={twitterLogo} />
