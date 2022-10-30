@@ -6,13 +6,16 @@ import twitterLogo from './assets/twitter-logo.svg';
 import nftMintingSiteTest2 from './utils/NftMintingSiteTest2.json';
 
 // Constants
-const TWITTER_HANDLE = '_buildspace';
+const TWITTER_HANDLE = 'ronjozkeddely';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const OPENSEA_LINK = '';
 const TOTAL_MINT_COUNT = 50;
+const CONTRACT_ADDRESS = '0x1A3C504c5d1719349C12041B31dE31B25faA3cdF';
 
 const App = (): ReactElement => {
 	const [currentAccount, setcurrentAccount] = useState('');
+	const [mintingNFT, seTmintingNFT] = useState(false);
+	const [mintInfo, setMintInfo] = useState('');
 
 	const checkIfWalletIsConnected = async (): Promise<void> => {
 		//@ts-ignore
@@ -30,8 +33,17 @@ const App = (): ReactElement => {
 			const account = accounts[0];
 			console.log('Found an authorized account: ', account);
 			setcurrentAccount(account);
+			setupEventListener();
 		} else {
 			console.log('No authorized account found');
+		}
+
+		let chainId = await ethereum.request({ method: 'eth_chainId' });
+		console.log('Connected to chain ' + chainId);
+
+		const goerliChainId = '0x5';
+		if (chainId !== goerliChainId) {
+			alert("My boy, you're not connected to the Goerli Test Network");
 		}
 	};
 
@@ -50,15 +62,45 @@ const App = (): ReactElement => {
 
 			console.log('Connected', accounts[0]);
 			setcurrentAccount(accounts[0]);
+			setupEventListener();
+		} catch (error) {
+			console.log('Error: ', error);
+		}
+	};
+
+	const setupEventListener = async () => {
+		try {
+			//@ts-ignore
+			const { ethereum } = window;
+
+			if (ethereum) {
+				const provider = new ethers.providers.Web3Provider(ethereum);
+				const signer = provider.getSigner();
+				const connectedContract = new ethers.Contract(
+					CONTRACT_ADDRESS,
+					nftMintingSiteTest2.abi,
+					signer
+				);
+
+				connectedContract.on('NewEpicNFTMinted', (from, tokenId) => {
+					console.log(from, tokenId.toNumber());
+					setMintInfo(
+						`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+					);
+				});
+
+				console.log('Setup event listener');
+			} else {
+				console.log("Ethereum object doesn't exist");
+			}
 		} catch (error) {
 			console.log('Error: ', error);
 		}
 	};
 
 	const askContractToMintNft = async () => {
-		const CONTRACT_ADDRESS = '0x1A3C504c5d1719349C12041B31dE31B25faA3cdF';
-
 		try {
+			seTmintingNFT(true);
 			//@ts-ignore
 			const { ethereum } = window;
 
@@ -80,10 +122,12 @@ const App = (): ReactElement => {
 				console.log(
 					`Minded, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`
 				);
+				seTmintingNFT(false);
 			} else {
 				console.log("Ethereum object doesn't exist!");
 			}
 		} catch (error) {
+			seTmintingNFT(false);
 			console.log('Error: ', error);
 		}
 	};
@@ -116,19 +160,26 @@ const App = (): ReactElement => {
 						<button
 							onClick={askContractToMintNft}
 							className='cta-button connect-wallet-button'
+							disabled={mintingNFT}
 						>
-							Mint NFT
+							{mintingNFT ? 'Loading...' : 'Mint NFT'}
 						</button>
 					)}
+					{mintInfo !== '' ? (
+						<h3 style={{ marginTop: '15px', fontWeight: 'bold' }}>
+							{mintInfo}
+						</h3>
+					) : null}
 				</div>
 				<div className='footer-container'>
 					<img alt='Twitter Logo' className='twitter-logo' src={twitterLogo} />
 					<a
 						className='footer-text'
+						style={{ cursor: 'pointer' }}
 						href={TWITTER_LINK}
 						target='_blank'
 						rel='noreferrer'
-					>{`built on @${TWITTER_HANDLE}`}</a>
+					>{`Built by @${TWITTER_HANDLE}`}</a>
 				</div>
 			</div>
 		</div>
